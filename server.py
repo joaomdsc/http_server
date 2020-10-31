@@ -22,6 +22,10 @@ class Unbuffered(object):
 
 import sys
 sys.stdout = Unbuffered(sys.stdout)
+    
+#-------------------------------------------------------------------------------
+# TCPServer
+#-------------------------------------------------------------------------------
 
 class TCPServer:
     def __init__(self, host='127.0.0.1', port=80):
@@ -36,7 +40,11 @@ class TCPServer:
         print(f'Listening at {s.getsockname()}')
 
         while True:
-            conn, addr = s.accept()
+            try:
+                conn, addr = s.accept()
+            except KeyboardInterrupt:
+                print('\nCtrl-C, exiting.')
+                sys.exit()
             print(f'Connected by {addr}')
             
             # Read the first 1024 bytes of data from the client
@@ -46,21 +54,21 @@ class TCPServer:
             # Prepare the response
             resp = self.handle_request(data)
             
-            # Echo the data back to the client. Chrome reports an
-            # ERR_INVALID_HTTP_RESPONSE if the first line is omitted.
+            # Echo the data back to the client. 
             conn.sendall(resp)
-
             conn.close()
+    
+#-------------------------------------------------------------------------------
+# HTTPServer
+#-------------------------------------------------------------------------------
 
+class HTTPServer(TCPServer):
     def handle_request(self, data):
+        # Chrome says ERR_INVALID_HTTP_RESPONSE if the first line is omitted.
         return b'HTTP/1.1 200 OK\n\n' + data
-
-def signal_handler(sig, frame):
-    print('User pressed Ctrl-C')
-    sys.exit()
     
 #-------------------------------------------------------------------------------
 # main
 #-------------------------------------------------------------------------------
 
-srv = TCPServer()
+srv = HTTPServer()
