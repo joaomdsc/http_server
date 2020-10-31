@@ -128,7 +128,26 @@ class HTTPServer(TCPServer):
 </html>
 """
         return resp_line + headers + self.blank + body            
-        
+
+    def handle_POST(self, req):
+        print('Received POST request')
+
+        params = req.body.split('&')
+        for p in params:
+            vals = p.split('=')
+            print(f'{vals[0]}: {vals[1]}')
+
+        # Respond
+        resp_line = self.resp_line(200)
+        headers = self.resp_headers()
+        body = b"""<html>
+  <body>
+    <h1>POST received</h1>
+  </body>
+</html>
+"""
+        return resp_line + headers + self.blank + body            
+
     def handle_request(self, data):
         req = HTTPRequest(data)
         try:
@@ -146,8 +165,11 @@ class HTTPRequest:
         self.method = None
         self.uri = None
         self.version = '1.1'
+        self.body = None
 
         lines = data.split(b'\n')
+
+        # Request line
         request = lines[0]
         words = request.split()
 
@@ -159,7 +181,12 @@ class HTTPRequest:
 
         if len(words) > 2:
             self.version = words[2].decode()
-        
+
+        # Loop over headers
+        for i, l in enumerate(lines[1:]):
+            if len(l) == 0:
+                break
+        self.body = lines[i+1].decode()
     
 #-------------------------------------------------------------------------------
 # main
