@@ -4,8 +4,10 @@
 # Firefox: User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0
 # Chrome : User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
 
+import os
 import sys
 import socket
+import mimetypes
       
 #-------------------------------------------------------------------------------
 # I want stdout to be unbuffered, always
@@ -63,9 +65,101 @@ class TCPServer:
 #-------------------------------------------------------------------------------
 
 class HTTPServer(TCPServer):
+    blank = b'\n'
+
+    headers = {
+        'Server': 'Joao Server',
+        'Content-Type': 'text/html',
+    }
+
+    status_codes = {
+        200: 'OK',
+        404: 'Not Found.',
+        501: 'Not Implemented.',
+    }
+
+    def resp_line(self, code):
+        """Return the response line (as binary)."""
+        reason = self.status_codes[code]
+        line = f'HTTP/1.1 {code} {reason}\n'
+        return line.encode()
+
+    def resp_headers(self, extra_headers=None):
+        """Return the response headers (as binary)."""
+        hdr = self.headers.copy()
+        if extra_headers:
+            hdr.update(extra_headers)
+
+        # Local 'headers' variable
+        headers = ''
+        for h, v in hdr.items():
+            headers += f'{h}: {v}\n'
+
+        return headers.encode()
+
+    def HTTP_501_handler(self):
+        resp_line = self.resp_line(501)
+        headers = self.resp_headers()
+        body = b"""<html>
+  <body>
+    <h1>501 Not Implemented</h1>
+  </body>
+</html>
+"""
+        return resp_line + headers + self.blank + body
+
+    def handle_GET(self, req):
+        filename = req.uri.strip('/')
+
+        if os.path.exists(filename):
+            resp_line = self.resp_line(200)
+            content_type = mimetypes.guess_type(filename)[0] or 'text/html'
+            extra_headers = {'Content-Type': content_type}
+            headers = self.resp_headers(extra_headers)
+            with open(filename, 'rb') as f:
+                body = f.read()
+        else:
+            resp_line = self.resp_line(404)
+            headers = self.resp_headers()
+            body = b"""<html>
+  <body>
+    <h1>404 Not Found</h1>
+  </body>
+</html>
+"""
+        return resp_line + headers + self.blank + body            
+        
     def handle_request(self, data):
-        # Chrome says ERR_INVALID_HTTP_RESPONSE if the first line is omitted.
-        return b'HTTP/1.1 200 OK\n\n' + data
+        req = HTTPRequest(data)
+        try:
+            handler = getattr(self, f'handle_{req.method}')
+        except AttributeError:
+            handler = self.HTTP_501_handler
+        return handler(req)
+    
+#-------------------------------------------------------------------------------
+# HTTPRequest
+#-------------------------------------------------------------------------------
+
+class HTTPRequest:
+    def __init__(self, data):
+        self.method = None
+        self.uri = None
+        self.version = '1.1'
+
+        lines = data.split(b'\n')
+        request = lines[0]
+        words = request.split()
+
+        self.method = words[0].decode()
+
+        if len(words) > 1:
+            # Sometimes browsers woon't send uri for homepage
+            self.uri = words[1].decode()
+
+        if len(words) > 2:
+            self.version = words[2].decode()
+        
     
 #-------------------------------------------------------------------------------
 # main
