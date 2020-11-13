@@ -27,9 +27,13 @@ sys.stdout = Unbuffered(sys.stdout)
 def tcp_client(dest_addr, dest_port):
     # Create the socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        # # Using SO_BINDTODEVICE to force an outgoing network interface. In this
+        # # case, enp0s8 has the 10.0.3.15 address.
+        # s.setsockopt(socket.SOL_SOCKET, 25, b'enp0s3')
+        
         print(f'Connecting to {dest_addr}, {dest_port}')
         s.connect((dest_addr, dest_port))
-        print(f'Local port is {s.getsockname()[1]}')
+        print(f'Connecting from {s.getsockname()}')
         n = 0
         cnt = 0
         while True:
