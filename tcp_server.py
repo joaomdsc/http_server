@@ -2,8 +2,6 @@
 
 import sys
 import socket
-
-import yaml
       
 #-------------------------------------------------------------------------------
 # I want stdout to be unbuffered, always
