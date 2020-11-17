@@ -2,6 +2,7 @@
 
 import sys
 import socket
+from _thread import start_new_thread
       
 #-------------------------------------------------------------------------------
 # I want stdout to be unbuffered, always
@@ -20,6 +21,24 @@ import sys
 sys.stdout = Unbuffered(sys.stdout)
     
 #-------------------------------------------------------------------------------
+# on_new_client
+#-------------------------------------------------------------------------------
+
+def on_new_client(conn, port):
+    cnt = 0
+    while True:
+        data = conn.recv(1024)
+        print(f'{port}={data.decode()}')
+        cnt += 1
+        if cnt == 20:
+            print()
+            cnt = 0
+        if not data: break
+        data = '.'
+        conn.sendall(data.encode())
+    conn.close()
+    
+#-------------------------------------------------------------------------------
 # tcp_server
 #-------------------------------------------------------------------------------
 
@@ -31,22 +50,11 @@ def tcp_server(bind_addr, listen_port):
 
         print(f'Listening at {s.getsockname()}')
 
-        # conn is a client socket. What's the port ?
-        conn, addr = s.accept()
-
-        # with ensures the socket gets closed ?
-        with conn:
-            print('Connected from', addr)
-            cnt = 0
-            while True:
-                data = conn.recv(1024)
-                print(data.decode(), end='')
-                cnt += 1
-                if cnt == 20:
-                    print()
-                    cnt = 0
-                if not data: break
-                conn.sendall(data)
+        while True:
+            # conn is a client socket. What's the port ?
+            conn, addr = s.accept()
+            print(f'tcp_server: connected from {addr}')
+            start_new_thread(on_new_client, (conn, addr[1]))
     
 #-------------------------------------------------------------------------------
 # main
@@ -66,7 +74,8 @@ else:
     listen_port = int(sys.argv[2])
 
 if listen_port < 1024:
-    print(f'Invalid port {listen_port}, ports below 1024 are reserved for the system.')
+    print(f'Invalid port {listen_port}, ports below 1024 are reserved '
+          'for the system.')
     sys.exit(-1)
 
 # Create the server
