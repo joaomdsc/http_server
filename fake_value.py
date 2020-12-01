@@ -11,6 +11,7 @@ max = 1
 # Command line arguments
 if len(sys.argv) != 5:
     print(f'Usage: {sys.argv[0]} -w <warn> -c <crit>')
+    sys.exit(3)
     
 # Warning threshold
 warn = float(sys.argv[2])
