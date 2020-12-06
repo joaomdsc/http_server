@@ -46,7 +46,7 @@ obj_names = {
     'hostescalation': None,
     'hostextinfo': None,
     'serviceextinfo': None,
-    'connector': None,
+    'connector': 'connector_name',
 }
 
 #-------------------------------------------------------------------------------
@@ -118,10 +118,16 @@ def parse_object_types(objs):
 
 # Process the main objects file
 dirpath = os.path.join(os.getenv('HOME'), '.nagios_cfg')
-filepath = os.path.join(dirpath, 'objects.json')
 
+filepath = os.path.join(dirpath, 'objects.json')
 with open(filepath) as f:
     trees = parse_object_types(json.load(f))
 
+# Text output
 for t in trees:
     print_node(t, 0)
+
+# Json output
+filepath = os.path.join(dirpath, 'inherit.json')
+with open(filepath, 'w') as f:
+    json.dump(trees, f, indent=4)
