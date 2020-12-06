@@ -1,8 +1,14 @@
 # nagios_cfg.py - parse Nagios/Centreon configuration files
 
-"""The main configuration file uses an include directive (cfg_file=XXX) to
+"""Parse Nagios/Centreon configuration files.
+
+The first command line argument should be the full path to the nagios main
+configuration file. This file uses an include directive (cfg_file=XXX) to
 include other files. A different syntax in object files (with the same
 semantics) is include_file=XXX.
+
+This is meant to be run on the nagios server, so we can use the paths from the
+cfg_file options directly.
 
 We start by reading in nagios.cfg and going over all the includes. Each of the
 included files defines objects (command, connector, host, service, timeperiod),
@@ -34,22 +40,6 @@ class Unbuffered(object):
 
 import sys
 sys.stdout = Unbuffered(sys.stdout)
-
-#-------------------------------------------------------------------------------
-# globals
-#-------------------------------------------------------------------------------
-
-# These should be arguments, configuration, or environment variables
-# ref = '/etc/centreon-engine'
-# src = r'c:/a/centreon/server/192.168.0.43/centreon-engine'
-# dst = r'c:\tmp\cfg\centreon_192.168.0.43'
-
-# src = r'c:/a/centreon/server/172.18.0.13/centreon-engine'
-# dst = r'c:\tmp\cfg\centreon_172.18.0.13'
-
-ref = '/usr/local/nagios/etc/objects'
-src = r'c:\a\centreon\server\192.168.0.45_nagios'
-dst = r'c:\tmp\cfg\nagios_192.168.0.45'
 
 #-------------------------------------------------------------------------------
 # parse_main
@@ -87,13 +77,6 @@ def parse_main(f):
             # Create a table of include files 
             if 'cfg_file' not in d:
                 d['cfg_file'] = []
-
-            # Change path of include files to local settings
-            head, tail = os.path.split(val)
-            if head == ref:
-                val = os.path.join(src, tail)
-                print(val)
-                
             d['cfg_file'].append(val)
         else:
             d[key] = val
@@ -105,7 +88,11 @@ def parse_main(f):
 #-------------------------------------------------------------------------------
 
 def dump_to_file(filename, obj):
-    filepath = os.path.join(dst, filename.rsplit('.', maxsplit=1)[0] + '.json')
+    dirpath = os.path.join(os.getenv('HOME'), '.nagios_cfg')
+    if not os.path.exists(dirpath):
+        os.mkdir(dirpath)
+
+    filepath = os.path.join(dirpath, filename.rsplit('.', maxsplit=1)[0] + '.json')
     with open(filepath, 'w') as f:
         json.dump(obj, f, indent=4)
 
@@ -227,8 +214,7 @@ def parse_objects(cfg):
             if len(o) > 0:
                 dump_to_file(os.path.split(path)[1], o)
                 objs = merge_objects(objs, o)
-
-    dump_to_file('objects.json', objs)
+    return objs
 
 #-------------------------------------------------------------------------------
 # main
@@ -245,4 +231,5 @@ with open(filepath) as f:
 dump_to_file(os.path.split(filepath)[1], cfg)
 
 # Process included files (object definitions)
-obj = parse_objects(cfg)
+objs = parse_objects(cfg)
+dump_to_file('objects.json', objs)
