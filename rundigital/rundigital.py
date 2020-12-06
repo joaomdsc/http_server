@@ -111,7 +111,7 @@ def dump_text(sociétés):
 #-------------------------------------------------------------------------------
 
 sociétés = []
-for i in range(4):
+for i in range(5):
     fp = rf'C:\a\rundigital\Speed Meetings - page{i+1}.html'
     sociétés.extend(get_société(fp))
 
