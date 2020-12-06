@@ -40,13 +40,16 @@ sys.stdout = Unbuffered(sys.stdout)
 #-------------------------------------------------------------------------------
 
 # These should be arguments, configuration, or environment variables
-ref = '/etc/centreon-engine'
+# ref = '/etc/centreon-engine'
 # src = r'c:/a/centreon/server/192.168.0.43/centreon-engine'
 # dst = r'c:\tmp\cfg\centreon_192.168.0.43'
-src = r'c:/a/centreon/server/172.18.0.13/centreon-engine'
-dst = r'c:\tmp\cfg\centreon_172.18.0.13'
-# src = r'c:/a/centreon/server/192.168.0.45'
-# dst = r'c:\tmp\cfg\nagios_192.168.0.45'
+
+# src = r'c:/a/centreon/server/172.18.0.13/centreon-engine'
+# dst = r'c:\tmp\cfg\centreon_172.18.0.13'
+
+ref = '/usr/local/nagios/etc/objects'
+src = r'c:\a\centreon\server\192.168.0.45_nagios'
+dst = r'c:\tmp\cfg\nagios_192.168.0.45'
 
 #-------------------------------------------------------------------------------
 # parse_main
@@ -89,6 +92,7 @@ def parse_main(f):
             head, tail = os.path.split(val)
             if head == ref:
                 val = os.path.join(src, tail)
+                print(val)
                 
             d['cfg_file'].append(val)
         else:
@@ -152,6 +156,10 @@ def parse_obj_file(f):
         n = line.find(';')
         if n != -1:
             line = line[:n]
+            # Remove if remains is blank-only or empty lines
+            m = re.match('\s*$', line)
+            if m:
+                continue
 
         # Begin object
         pat = rf"\s*define\s+({'|'.join(object_types)})\s*{{"
@@ -214,6 +222,7 @@ def parse_objects(cfg):
     objs = {}
     for path in cfg['cfg_file']:
         with open(path, 'r') as f:
+            print(f'Parsing file "{path}"')
             o = parse_obj_file(f)
             if len(o) > 0:
                 dump_to_file(os.path.split(path)[1], o)
