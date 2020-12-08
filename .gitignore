@@ -117,5 +117,5 @@ dmypy.json
 .pyre/
 
 # local project ignores
-rundigital/rundigital.json
+rundigital/*.json
 rundigital/rundigital.txt

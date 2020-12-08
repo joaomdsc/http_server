@@ -1,5 +1,10 @@
-# webscrap.py - RunDigital
+# webscrap2.py - RunDigital 2ème site web, après acceptation des rdvs
 
+# Les pages de détail de chaque entreprise n'ont pas le nom de l'entreprise,
+# elles ont des logos. On n'a nulle part textuellement le nom de la boîte. Ce
+# code re-parcourt le catalogue pour extraire juste la liste des noms. 
+
+import os
 import sys
 from time import sleep
 
@@ -32,6 +37,14 @@ sys.stderr = Unbuffered(sys.stderr)
 part_sleep = 30
 
 #-------------------------------------------------------------------------------
+# get_page
+#-------------------------------------------------------------------------------
+
+def get_page(url):
+    print(f'Getting {url}', file=sys.stderr)
+    drv.get(url)
+
+#-------------------------------------------------------------------------------
 # get_login
 #-------------------------------------------------------------------------------
 
@@ -43,8 +56,9 @@ def get_login(url):
     name.send_keys('anchavalie')
     pswd = drv.find_element_by_id('Password')
     pswd.send_keys('5Spu*bbj')
-
-    drv.find_element_by_id('btnLogin').click()
+    
+    btn = drv.find_element_by_xpath('//form[@id="frmLogin"]/a')
+    btn.click()
 
 #-------------------------------------------------------------------------------
 # main
@@ -55,23 +69,24 @@ opt = Options()
 drv = webdriver.Firefox(options=opt)
 
 # Login
-get_login('https://client.premiumcontact.fr/')
+get_login('https://app.premiumcontact.fr/')
 sleep(10)
 
 # RunDigital
-print(f'Getting RunDigital', file=sys.stderr)
-drv.get('https://client.premiumcontact.fr/Event/cLickEvent/370')
+print(f'Getting Catalogue', file=sys.stderr)
+drv.get('https://app.premiumcontact.fr/Catalogue/Index?idIntermediation=370')
 sleep(10)
 
-# Getting pages
-print(f'Getting pages', file=sys.stderr)
-for i in range(5):
-    url = f'https://client.premiumcontact.fr/speedmeetings/370?page={i+1}'
-    drv.get(url)
-    sleep(5)
-    filepath = rf'c:\a\rundigital\Speed Meetings - page{i+1}.html'
-    with open(filepath, 'w', encoding='utf-8') as f:
-        f.write(drv.page_source)
+# Catalogue
+urls = []
+for h2 in drv.find_elements_by_xpath('//div[@class="media-body m-t-5"]/h2'):
+    name = h2.text
+    print(f'Nom={name}')
+print()
+
+for s in drv.find_elements_by_xpath('//div[@class="media-body m-t-5"]/h2/small'):
+    stext = s.text
+    print(f's={stext}')
 
 # Stop the firefox process
 drv.close()

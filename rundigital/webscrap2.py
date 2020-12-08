@@ -1,5 +1,6 @@
-# webscrap.py - RunDigital
+# webscrap2.py - RunDigital 2ème site web, après acceptation des rdvs
 
+import os
 import sys
 from time import sleep
 
@@ -43,8 +44,9 @@ def get_login(url):
     name.send_keys('anchavalie')
     pswd = drv.find_element_by_id('Password')
     pswd.send_keys('5Spu*bbj')
-
-    drv.find_element_by_id('btnLogin').click()
+    
+    btn = drv.find_element_by_xpath('//form[@id="frmLogin"]/a')
+    btn.click()
 
 #-------------------------------------------------------------------------------
 # main
@@ -55,23 +57,35 @@ opt = Options()
 drv = webdriver.Firefox(options=opt)
 
 # Login
-get_login('https://client.premiumcontact.fr/')
+get_login('https://app.premiumcontact.fr/')
 sleep(10)
 
 # RunDigital
-print(f'Getting RunDigital', file=sys.stderr)
-drv.get('https://client.premiumcontact.fr/Event/cLickEvent/370')
+print(f'Getting Catalogue', file=sys.stderr)
+drv.get('https://app.premiumcontact.fr/Catalogue/Index?idIntermediation=370')
 sleep(10)
 
-# Getting pages
-print(f'Getting pages', file=sys.stderr)
-for i in range(5):
-    url = f'https://client.premiumcontact.fr/speedmeetings/370?page={i+1}'
-    drv.get(url)
-    sleep(5)
-    filepath = rf'c:\a\rundigital\Speed Meetings - page{i+1}.html'
+# Destination
+dirpath = r'c:\a\rundigital\catalogue'
+
+# Catalogue
+urls = []
+for a in drv.find_elements_by_xpath('.//section/div[@class="container"]/a'):
+    url = a.get_attribute('href')
+    print(f'Storing url={url}')
+    urls.append(url)
+sleep(10)
+
+n = 0
+for u in urls:
+    print(f'Getting url={url}')
+    drv.get(u)
+
+    filepath = os.path.join(dirpath, f'contact{n}.html')
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(drv.page_source)
+    n += 1
+    sleep(30)
 
 # Stop the firefox process
 drv.close()
