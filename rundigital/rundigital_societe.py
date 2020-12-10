@@ -1,6 +1,7 @@
 # rundigital_societe.py - web scrapping
 
 import os
+import re
 import json
 import urllib.request
 from lxml import etree, html
@@ -37,7 +38,10 @@ def get_société(fp):
     # Adresse
     x = root.find('.//div[@class="pmo-block pmo-contact  "]/ul/li/address')
     # FIXME ici il faut tout le texte sous tous les sous-éléments
-    société['adresse'] = x.text.strip()
+    addr = [x.text.strip()]
+    for y in x:
+        addr.append(y.tail.strip())
+    société['adresse'] = addr
     
     # Téléphones
     tels = []
@@ -46,14 +50,43 @@ def get_société(fp):
     société['tels'] = tels
 
     # # Adresse web
-    # x = root.find('.//div[@class="pmo-block pmo-contact  "]/ul/li/i[@class="zmdi zmdi-globe"]')
-    # # FIXME je veux le frère <a> du noeud <i>
-    # x = x.getparent()
-    # société['url'] = x.text.strip()
+    x = x.getparent().getnext()  # x will be <li>
+    x = x.find('.//a')
+    société['url'] = x.text.strip()
 
     # FIXME Les contacts (nom, fonction, etc) sont en texte non structuré sous
     # l'élément div[@class="pmbb-view"], à côté du pmo-contact
-    
+    x = root.find('.//div[@class="pmo-block pmo-contact  "]')
+
+    # APE codification activité
+    for i in range(3):
+        x = x.getnext()
+    m = re.match('APE : ([0-9A-Z.]+) (.*)', x.tail.strip())
+    société['ape_code'] = m.group(1)
+    société['ape_text'] = m.group(2)
+
+    # Contact
+    for i in range(5):
+        x = x.getnext()
+    if not (x.tag == 'strong' and x.text.startswith('CONTACT')):
+        print(f'error: tag={x.tag}, text={x.text}')
+    x = x.getnext()
+
+    contacts = []
+    while True:
+        contact = []
+        while True:
+            x = x.getnext()
+            if x is None or x.tail is None:
+                # FIXME at the end of the contacts list, we always get an empty
+                # contact (this parsing is bugged), remove it
+                contacts.append(contact)
+                break
+            contact.append(x.tail.strip())
+        if x is None:
+            break
+    société['contact'] = contacts[:-1]
+
     # Panels
     panels = []
     for x in root.findall('.//div[@class="panel-group"]/div[@class="panel panel-collapse"]'):
