@@ -1,4 +1,4 @@
-# check_server.py - generic simulated server check
+# check_service.py - generic simulated service check
 
 import os
 import sys
@@ -13,6 +13,8 @@ crit = 0.8
 # Command line args
 hostname = sys.argv[1]
 hoststate = sys.argv[2]
+servicename = sys.argv[3]
+servicestate = sys.argv[4]
 
 # Generate value
 # val = randrange(0, 100)/100
@@ -22,12 +24,12 @@ state = (0, 'OK') if val < warn \
   else (1, 'Warning') if val < crit \
   else (2, 'Critical')
   
-first_line = f'{state[1]}: val={val} | val={val};{warn};{crit};{min}; [{hostname}:{hoststate}]'
+first_line = f'{state[1]}: val={val} | val={val};{warn};{crit};{min}; [{hostname}:{hoststate}:{servicename}:{servicestate}]'
 print(first_line)
 
 # Log to /var/lib/centreon-engine
 dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-logpath = os.path.join(os.getenv('HOME'), 'check_server.log')
+logpath = os.path.join(os.getenv('HOME'), 'check_service.log')
 with open(logpath, 'a') as f:
     f.write(f'{dt}: {first_line}\n')
 
