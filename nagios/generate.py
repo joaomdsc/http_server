@@ -161,8 +161,8 @@ class Config:
 c = Config()
 c.populate()
 
-filepath = 'import.txt'
+filepath = 'c:/a/import.txt'
 c.gen_import(filepath)
 
-filepath = 'delete.sh'
+filepath = 'c:/a/delete.sh'
 c.gen_delete(filepath)
