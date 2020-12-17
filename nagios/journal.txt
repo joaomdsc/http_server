@@ -9,7 +9,6 @@ Notes on hosts: db_server (x4), backend (x4), web (x4), a total of 12 servers
 Host aliases 
 DB hosts: transac, warehouse, historical, logging (one for each server)
 
-
 *** Services (functional)
 
 DB services: fct_transac_NNN, fct_warehouse, fct_historical, fct_logging
@@ -43,48 +42,24 @@ requested, this allows us to dynamically force state changes.
 
 ** Centreon CLI
 
-List pollers
-centreon -u admin -p centreon -a pollerlist
-poller_id;name
-1;Central
+General form:
 
-Generate local configuration files 
-sudo centreon -u admin -p centreon -a pollergenerate -v 1
-Configuration files generated for poller '1'
+    centreon -u admin -p centreon -a ACTION -v 1
 
-Test monitoring engine configuration of a poller
-sudo centreon -u admin -p centreon -a pollertest -v 1
-OK: Centreon Poller 1 can restart without problem...
+where ACTION can be one of:
 
-Move monitoring engine configuration files
-sudo centreon -u admin -p centreon -a cfgmove -v 1
-OK: All configuration files copied with success.
-
-Restart monitoring engine of a poller
-sudo centreon -u admin -p centreon -a pollerrestart -v 1
-OK: A restart signal has been sent to 'Central'
-
-All in one command
-sudo centreon -u admin -p centreon -a applycfg -v 1
-2020-12-17 15:51:29 - APPLYCFG
-Configuration files generated for poller '1'
-
-OK: Centreon Poller 1 can restart without problem...
-
-OK: All configuration files copied with success.
-
-OK: A reload signal has been sent to 'Central'
-Return code end : 0
-
-Reload monitoring engine of a poller
-
-Execute post generation commands of a poller
+    pollerlist	      list pollers
+    pollergenerate    generate local configuration files
+    pollertest	      test monitoring engine configuration of a poller
+    cfgmove	      move monitoring engine configuration files
+    pollerrestart     restart monitoring engine of a poller
+    applycfg	      all (of the above) in one command
 
 ** Target
 
 Cfgmove overwrites my local changes, they must come after (losing the benefit
 of test). Alternatively, I need to be sure where the config files are first
-generated, an make my changes there.
+generated, and make my changes there.
 
 /var/cache/centreon/config/engine/1
 
@@ -96,14 +71,13 @@ generated, an make my changes there.
 
 I injected my local changes into /var/cache/centreon/config/engine/1/hosts.cfg,
 then followed with points 3 to 5. My changes are in /etc/centreon-engine, but
-not in the ui.
-
-And of course, when I do another generate, my changes are overwritten.
+not in the ui. And of course, when I do another generate, my changes are
+overwritten. So this doesn't work.
 
 What I don't know is, where is the real source ? When we do "generate config
 file", where does it come from ? That's where I would need to change it.
 
-** Different approach, let's try import/export
+** A different approach, let's try import/export
 
 Put notes in a host and a service through the UI:
   srvlnx007: db_server warehouse linux
@@ -112,51 +86,28 @@ Put notes in a host and a service through the UI:
 Confirmed: UI saves somewhere, and pollergenerate copies from somewhere to
 /var/cache.
 
+Exporting:
+
 [root@centreon-central ~]# centreon -u admin -p centreon -e --select='HOST;srvlnx007' --filter-type='^(HOST|SERVICE)$'
 HOST;ADD;srvlnx007;backend-server-03;127.0.0.1;;Central;
 HOST;setparam;srvlnx007;check_command;base_host_alive
 HOST;setparam;srvlnx007;check_period;24x7
-HOST;setparam;srvlnx007;notification_period;24x7
-HOST;setparam;srvlnx007;host_max_check_attempts;3
-HOST;setparam;srvlnx007;host_check_interval;1
-HOST;setparam;srvlnx007;host_retry_check_interval;1
-HOST;setparam;srvlnx007;host_active_checks_enabled;2
-HOST;setparam;srvlnx007;host_passive_checks_enabled;2
-HOST;setparam;srvlnx007;host_checks_enabled;2
-HOST;setparam;srvlnx007;host_obsess_over_host;2
-HOST;setparam;srvlnx007;host_check_freshness;2
-HOST;setparam;srvlnx007;host_event_handler_enabled;2
-HOST;setparam;srvlnx007;host_flap_detection_enabled;2
-HOST;setparam;srvlnx007;host_retain_status_information;2
-HOST;setparam;srvlnx007;host_retain_nonstatus_information;2
-HOST;setparam;srvlnx007;host_notifications_enabled;2
-HOST;setparam;srvlnx007;contact_additive_inheritance;0
-HOST;setparam;srvlnx007;cg_additive_inheritance;0
-HOST;setparam;srvlnx007;host_locked;0
-HOST;setparam;srvlnx007;host_register;1
+[...]
 HOST;setparam;srvlnx007;host_activate;1
 HOST;setparam;srvlnx007;notes;db_server warehouse linux
 
 SERVICE;ADD;srvlnx007;Specific service check;Joao-Template
 SERVICE;setparam;srvlnx007;Specific service check;check_command;check_server
 SERVICE;setparam;srvlnx007;Specific service check;service_is_volatile;2
-SERVICE;setparam;srvlnx007;Specific service check;service_active_checks_enabled;2
-SERVICE;setparam;srvlnx007;Specific service check;service_passive_checks_enabled;2
-SERVICE;setparam;srvlnx007;Specific service check;service_parallelize_check;2
-SERVICE;setparam;srvlnx007;Specific service check;service_obsess_over_service;2
-SERVICE;setparam;srvlnx007;Specific service check;service_check_freshness;2
-SERVICE;setparam;srvlnx007;Specific service check;service_event_handler_enabled;2
-SERVICE;setparam;srvlnx007;Specific service check;service_flap_detection_enabled;2
-SERVICE;setparam;srvlnx007;Specific service check;service_process_perf_data;2
-SERVICE;setparam;srvlnx007;Specific service check;service_retain_status_information;2
-SERVICE;setparam;srvlnx007;Specific service check;service_retain_nonstatus_information;2
-SERVICE;setparam;srvlnx007;Specific service check;service_notifications_enabled;2
-SERVICE;setparam;srvlnx007;Specific service check;contact_additive_inheritance;0
-SERVICE;setparam;srvlnx007;Specific service check;cg_additive_inheritance;0
-SERVICE;setparam;srvlnx007;Specific service check;service_inherit_contacts_from_host;1
-SERVICE;setparam;srvlnx007;Specific service check;service_use_only_contacts_from_host;0
-SERVICE;setparam;srvlnx007;Specific service check;service_locked;0
-SERVICE;setparam;srvlnx007;Specific service check;service_register;1
+[...]
 SERVICE;setparam;srvlnx007;Specific service check;service_activate;1
 SERVICE;setparam;srvlnx007;Specific service check;notes;fct_histo db_service
+
+Import:
+
+    centreon -u admin -p centreon -i import_file.txt
+
+and it immediately appears in the UI. Question: do I still have to go through
+all the steps (gen, check, move, restart) ?
+
 
