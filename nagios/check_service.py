@@ -2,7 +2,7 @@
 
 import os
 import sys
-from random import randrange
+import json
 from datetime import datetime
 
 min = 0
@@ -16,9 +16,16 @@ hoststate = sys.argv[2]
 servicename = sys.argv[3]
 servicestate = sys.argv[4]
 
-# Generate value
-# val = randrange(0, 100)/100
+# Determine value from file
+filepath = os.path.join(os.getenv('HOME'), 'status_service.json')
 val = 0.5
+try:
+    with open(filepath, 'r', encoding='utf-8') as f:
+        obj = json.load(f)
+    if servicename in obj:
+        val = obj[servicename]
+except FileNotFoundError:
+    pass
 
 state = (0, 'OK') if val < warn \
   else (1, 'Warning') if val < crit \

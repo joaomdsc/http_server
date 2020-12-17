@@ -2,7 +2,7 @@
 
 import os
 import sys
-from random import randrange
+import json
 from datetime import datetime
 
 min = 0
@@ -14,9 +14,16 @@ crit = 0.8
 hostname = sys.argv[1]
 hoststate = sys.argv[2]
 
-# Generate value
-# val = randrange(0, 100)/100
+# Determine value from file
+filepath = os.path.join(os.getenv('HOME'), 'status_server.json')
 val = 0.5
+try:
+    with open(filepath, 'r', encoding='utf-8') as f:
+        obj = json.load(f)
+    if hostname in obj:
+        val = obj[hostname]
+except FileNotFoundError:
+    pass
 
 state = (0, 'OK') if val < warn \
   else (1, 'Warning') if val < crit \

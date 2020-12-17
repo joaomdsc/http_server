@@ -112,8 +112,8 @@ class Config:
         # Database servers
         self.hosts.append(Host('srvlnx001', 'lnx_db_server_01', 'linux db_server transaction'))
         self.hosts.append(Host('srvlnx002', 'lnx_db_server_02', 'linux db_server warehouse'))
-        # self.hosts.append(Host('srvwin001', 'win_db_server_01', 'windows db_server historical'))
-        # self.hosts.append(Host('srvwin002', 'win_db_server_02', 'windows db_server logging'))
+        self.hosts.append(Host('srvwin001', 'win_db_server_01', 'windows db_server historical'))
+        self.hosts.append(Host('srvwin002', 'win_db_server_02', 'windows db_server logging'))
 
         # # Backend
         # self.hosts.append(Host('srvlnx003', 'lnx_backend_01', 'linux backend core'))
@@ -128,14 +128,14 @@ class Config:
         # self.hosts.append(Host('srvlnx008', 'lnx_web_server_04', 'linux web_server'))
 
         # Database services
-        for i in range(3):
+        for i in range(5):
             self.services.append(Service('srvlnx001', f'fct_transactional{i}', 'db_svc transactional'))
-        for i in range(3):
+        for i in range(5):
             self.services.append(Service('srvlnx002', f'fct_data_warehouse{i}', 'db_svc data_warehouse'))
-        # for i in range(5):
-        #     self.services.append(Service('srvwin001', f'fct_db_historical{i}', 'db_svc historical'))
-        # for i in range(5):
-        #     self.services.append(Service('srvwin002', f'fct_db_logging{i}', 'db_svc logging'))
+        for i in range(5):
+            self.services.append(Service('srvwin001', f'fct_db_historical{i}', 'db_svc historical'))
+        for i in range(5):
+            self.services.append(Service('srvwin002', f'fct_db_logging{i}', 'db_svc logging'))
 
         # # Backend services
         # for i in range(5):
