@@ -16,7 +16,7 @@ class Service:
 
     def gen_import(self):
         return f"""SERVICE;ADD;{self.host};{self.svc_desc};Joao-Template
-SERVICE;setparam;{self.host};{self.svc_desc};check_command;check_server
+SERVICE;setparam;{self.host};{self.svc_desc};check_command;check_service
 SERVICE;setparam;{self.host};{self.svc_desc};service_is_volatile;2
 SERVICE;setparam;{self.host};{self.svc_desc};service_active_checks_enabled;2
 SERVICE;setparam;{self.host};{self.svc_desc};service_passive_checks_enabled;2
