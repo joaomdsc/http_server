@@ -1,0 +1,43 @@
+* 2020/12/17
+
+** Simulating a large Centreon installation
+
+*** Hosts
+
+Hosts called srvlnxNNN and srvwinNNN
+Notes on hosts: db_server (x4), backend (x4), web (x4), a total of 12 servers
+Host aliases 
+DB hosts: transac, warehouse, historical, logging (one for each server)
+
+
+*** Services (functional)
+
+DB services: fct_transac_NNN, fct_warehouse, fct_historical, fct_logging
+4 db servers, 5 services per host
+
+Backend services: core, pricing, historization, logging (x5 on each server)
+
+web x5 services on each host
+
+A total of 60 services
+
+** Host and service generation
+
+Create a template through the UI, then use import/export mechanisms to create
+object. It's unclear at this point if I'll be able to simply edit object
+definition files (maybe once they've been created with the host or service id).
+
+Use the CLI for updating the configuration:
+
+    1. Generate config files (from what ?)
+    2. Check/validate config
+    3. Copy config files (to /etc/centreon-engine ?)
+       3.5 Can I edit the object definitions here ?
+    4. Re-start monitoring engine
+    
+** Check functions
+
+Checks on hosts/services return 0 (ok) by default. They read json files
+status_hosts.json and status_services.json where a different state may be
+requested, this allows us to dynamically force state changes.
+
