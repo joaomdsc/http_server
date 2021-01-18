@@ -110,4 +110,21 @@ Import:
 and it immediately appears in the UI. Question: do I still have to go through
 all the steps (gen, check, move, restart) ?
 
+** Files
 
+The user running the checks is centreon-engine, his HOME directory is
+/var/lib/centreon-engine. That's where we must store the status_server.json and
+status_service.json files, and that's where the checks will write their logs,
+check_server.log and check_service.log.
+
+    /var/lib/centreon-engine:
+    total used in directory 80 available 16279400
+    drwxr-xr-x.  4 centreon-engine centreon-engine  4096 Dec 17 23:03 .
+    drwxr-xr-x. 39 root            root             4096 Apr 20  2020 ..
+    prw-rw-r--   1 centreon-engine centreon-engine     0 Dec 17 16:01 central-module-master-stats.json
+    -rw-rw-r--   1 centreon-engine centreon-engine     8 Dec 17 16:01 central-module-master.unprocessed
+    -rw-rw-r--   1 centreon-engine centreon-engine  7107 Dec 17 23:04 check_server.log
+    -rw-rw-r--   1 centreon-engine centreon-engine 37337 Dec 17 23:04 check_service.log
+    drwxrwxr-x.  2 centreon-engine centreon-engine  4096 Sep 26 19:04 rw
+    -rw-r--r--   1 centreon-engine centreon-engine    82 Dec 17 23:03 status_server.json
+    -rw-r--r--   1 centreon-engine centreon-engine    93 Dec 17 23:03 status_service.json
