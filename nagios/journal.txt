@@ -128,3 +128,14 @@ check_server.log and check_service.log.
     drwxrwxr-x.  2 centreon-engine centreon-engine  4096 Sep 26 19:04 rw
     -rw-r--r--   1 centreon-engine centreon-engine    82 Dec 17 23:03 status_server.json
     -rw-r--r--   1 centreon-engine centreon-engine    93 Dec 17 23:03 status_service.json
+
+--------------------------------------------------------------------------------
+
+* 2021/01/18
+
+Illustrating the layout of servers and services monitored by Centreon.
+
+Preparing a presentation to demo the Centreon import into AppControl. The
+layout of servers and services is shown in all_servers.vsdx (db_servers.vsdx is
+just a subset). Some .png and .pptx files are derived from the .vsdx, they
+don't need to be under version control.
