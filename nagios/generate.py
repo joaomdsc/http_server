@@ -115,17 +115,17 @@ class Config:
         self.hosts.append(Host('srvwin001', 'win_db_server_01', 'windows db_server historical'))
         self.hosts.append(Host('srvwin002', 'win_db_server_02', 'windows db_server logging'))
 
-        # # Backend
-        # self.hosts.append(Host('srvlnx003', 'lnx_backend_01', 'linux backend core'))
-        # self.hosts.append(Host('srvlnx004', 'lnx_backend_02', 'linux backend pricing'))
-        # self.hosts.append(Host('srvwin003', 'win_backend_01', 'windows backend historical'))
-        # self.hosts.append(Host('srvwin004', 'win_backend_02', 'windows backend logging'))
+        # Backend
+        self.hosts.append(Host('srvlnx003', 'lnx_backend_01', 'linux backend core'))
+        self.hosts.append(Host('srvlnx004', 'lnx_backend_02', 'linux backend pricing'))
+        self.hosts.append(Host('srvwin003', 'win_backend_01', 'windows backend historical'))
+        self.hosts.append(Host('srvwin004', 'win_backend_02', 'windows backend logging'))
 
-        # # Web servers
-        # self.hosts.append(Host('srvlnx005', 'lnx_web_server_01', 'linux web_server'))
-        # self.hosts.append(Host('srvlnx006', 'lnx_web_server_02', 'linux web_server'))
-        # self.hosts.append(Host('srvlnx007', 'lnx_web_server_03', 'linux web_server'))
-        # self.hosts.append(Host('srvlnx008', 'lnx_web_server_04', 'linux web_server'))
+        # Web servers
+        self.hosts.append(Host('srvlnx005', 'lnx_web_server_01', 'linux web_server'))
+        self.hosts.append(Host('srvlnx006', 'lnx_web_server_02', 'linux web_server'))
+        self.hosts.append(Host('srvlnx007', 'lnx_web_server_03', 'linux web_server'))
+        self.hosts.append(Host('srvlnx008', 'lnx_web_server_04', 'linux web_server'))
 
         # Database services
         for i in range(5):
@@ -137,22 +137,22 @@ class Config:
         for i in range(5):
             self.services.append(Service('srvwin002', f'fct_db_logging{i}', 'db_svc logging'))
 
-        # # Backend services
-        # for i in range(5):
-        #     self.services.append(Service('srvlnx003', f'fct_core{i}', 'backend_svc core'))
-        # for i in range(5):
-        #     self.services.append(Service('srvlnx004', f'fct_pricing{i}', 'backend_svc pricing'))
-        # for i in range(5):
-        #     self.services.append(Service('srvwin003', f'fct_historical{i}', 'backend_svc historical'))
-        # for i in range(5):
-        #     self.services.append(Service('srvwin004', f'fct_logging{i}', 'backend_svc logging'))
+        # Backend services
+        for i in range(5):
+            self.services.append(Service('srvlnx003', f'fct_core{i}', 'backend_svc core'))
+        for i in range(5):
+            self.services.append(Service('srvlnx004', f'fct_pricing{i}', 'backend_svc pricing'))
+        for i in range(5):
+            self.services.append(Service('srvwin003', f'fct_historical{i}', 'backend_svc historical'))
+        for i in range(5):
+            self.services.append(Service('srvwin004', f'fct_logging{i}', 'backend_svc logging'))
 
-        # # Web services
-        # k = 0
-        # for i in range(5, 9):
-        #     for j in range(5):
-        #         self.services.append(Service(f'srvlnx00{i}', f'fct_web{k}', 'web_svc'))
-        #         k += 1
+        # Web services
+        k = 0
+        for i in range(5, 9):
+            for j in range(5):
+                self.services.append(Service(f'srvlnx00{i}', f'fct_web{k}', 'web_svc'))
+                k += 1
 
 #-------------------------------------------------------------------------------
 # main

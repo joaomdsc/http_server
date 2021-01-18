@@ -110,6 +110,12 @@ Import:
 and it immediately appears in the UI. Question: do I still have to go through
 all the steps (gen, check, move, restart) ?
 
+ANSWER: no, there's the 'applycfg' action which performs all of those steps, so
+you can do for example:
+
+centreon -u admin -p centreon -i /root/import.txt
+centreon -u admin -p centreon -a applycfg -v 1
+
 ** Files
 
 The user running the checks is centreon-engine, his HOME directory is
