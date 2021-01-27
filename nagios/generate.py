@@ -2,7 +2,46 @@
 
 # Globals
 user = 'admin'
-pswd = 'centreon'
+# pswd = 'centreon'  # local
+pswd = 'admin'  # remote
+
+#-------------------------------------------------------------------------------
+
+class Command:
+    def __init__(self, name, line):
+        self.name = name
+        self.line = line
+
+    def gen_delete(self):
+        """The command to delete this command"""
+        return f'centreon -u {user} -p {pswd} -o cmd -a del -v "{self.name}"\n'
+
+    def gen_import(self):
+        return f'CMD;add;{self.name};2;{self.line}\n'
+
+#-------------------------------------------------------------------------------
+
+class SrvTemplate:
+    def __init__(self, name, desc, use):
+        self.name = name
+        self.desc = desc
+        self.use = use
+
+    def gen_delete(self):
+        """The command to delete this service template"""
+        return f'centreon -u {user} -p {pswd} -o stpl -a del -v {self.name}\n'
+
+    def gen_import(self):
+        return f"""STPL;add;{self.name};{self.desc};{self.use}
+STPL;setparam;{self.name};check_command;check_service
+STPL;setparam;{self.name};check_period;24x7
+STPL;setparam;{self.name};service_max_check_attempts;3
+STPL;setparam;{self.name};service_normal_check_interval;1
+STPL;setparam;{self.name};service_retry_check_interval;1
+STPL;setparam;{self.name};service_register;0
+"""
+
+#-------------------------------------------------------------------------------
 
 class Service:
     def __init__(self, host, svc_desc, notes):
@@ -10,34 +49,17 @@ class Service:
         self.svc_desc = svc_desc
         self.notes = notes
 
-    def delete(self):
+    def gen_delete(self):
         """The command to delete this service"""
-        return f'centreon -u {user} -p {pswd} -o service -a del -v "{self.host};{self.svc_desc}"\n'
+        return f'centreon -u {user} -p {pswd} -o service -a del ' \
+            f'-v "{self.host};{self.svc_desc}"\n'
 
     def gen_import(self):
-        return f"""SERVICE;ADD;{self.host};{self.svc_desc};Joao-Template
-SERVICE;setparam;{self.host};{self.svc_desc};check_command;check_service
-SERVICE;setparam;{self.host};{self.svc_desc};service_is_volatile;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_active_checks_enabled;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_passive_checks_enabled;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_parallelize_check;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_obsess_over_service;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_check_freshness;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_event_handler_enabled;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_flap_detection_enabled;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_process_perf_data;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_retain_status_information;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_retain_nonstatus_information;2
-SERVICE;setparam;{self.host};{self.svc_desc};service_notifications_enabled;2
-SERVICE;setparam;{self.host};{self.svc_desc};contact_additive_inheritance;0
-SERVICE;setparam;{self.host};{self.svc_desc};cg_additive_inheritance;0
-SERVICE;setparam;{self.host};{self.svc_desc};service_inherit_contacts_from_host;1
-SERVICE;setparam;{self.host};{self.svc_desc};service_use_only_contacts_from_host;0
-SERVICE;setparam;{self.host};{self.svc_desc};service_locked;0
-SERVICE;setparam;{self.host};{self.svc_desc};service_register;1
-SERVICE;setparam;{self.host};{self.svc_desc};service_activate;1
+        return f"""SERVICE;add;{self.host};{self.svc_desc};Joao-Template
 SERVICE;setparam;{self.host};{self.svc_desc};notes;{self.notes}
 """
+
+#-------------------------------------------------------------------------------
 
 class Host:
     def __init__(self, host, alias, notes):
@@ -45,50 +67,43 @@ class Host:
         self.alias = alias
         self.notes = notes
 
-    def delete(self):
+    def gen_delete(self):
         """The command to delete this host"""
         # Note: this fails if the line has a Windows-style line ending
         return f'centreon -u {user} -p {pswd} -o host -a del -v {self.host}\n'
 
     def gen_import(self):
-        return f"""HOST;ADD;{self.host};{self.alias};127.0.0.1;;Central;
+        return f"""HOST;add;{self.host};{self.alias};127.0.0.1;;Central;
 HOST;setparam;{self.host};check_command;base_host_alive
 HOST;setparam;{self.host};check_period;24x7
 HOST;setparam;{self.host};notification_period;24x7
 HOST;setparam;{self.host};host_max_check_attempts;3
 HOST;setparam;{self.host};host_check_interval;1
 HOST;setparam;{self.host};host_retry_check_interval;1
-HOST;setparam;{self.host};host_active_checks_enabled;2
-HOST;setparam;{self.host};host_passive_checks_enabled;2
-HOST;setparam;{self.host};host_checks_enabled;2
-HOST;setparam;{self.host};host_obsess_over_host;2
-HOST;setparam;{self.host};host_check_freshness;2
-HOST;setparam;{self.host};host_event_handler_enabled;2
-HOST;setparam;{self.host};host_flap_detection_enabled;2
-HOST;setparam;{self.host};host_retain_status_information;2
-HOST;setparam;{self.host};host_retain_nonstatus_information;2
-HOST;setparam;{self.host};host_notifications_enabled;2
-HOST;setparam;{self.host};contact_additive_inheritance;0
-HOST;setparam;{self.host};cg_additive_inheritance;0
-HOST;setparam;{self.host};host_locked;0
-HOST;setparam;{self.host};host_register;1
-HOST;setparam;{self.host};host_activate;1
 HOST;setparam;{self.host};notes;{self.notes}
 """
 
+#-------------------------------------------------------------------------------
+
 class Config:
     def __init__(self):
-        """Create all the hosts (12) and services."""
+        """Create all the commands, service templates, hosts (12) and services."""
+        self.cmds = []
+        self.stpls = []
         self.hosts = []
         self.services = []
 
     def gen_import(self, filepath):
         """Generate the import data"""
         s = ''
-        for h in self.hosts:
-            s += h.gen_import()
-        for svc in self.services:
-            s += svc.gen_import()
+        for x in self.cmds:
+            s += x.gen_import()
+        for x in self.stpls:
+            s += x.gen_import()
+        for x in self.hosts:
+            s += x.gen_import()
+        for x in self.services:
+            s += x.gen_import()
             
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(s)
@@ -96,19 +111,28 @@ class Config:
     def gen_delete(self, filepath):
         """Generate the delete script"""
         s = ''
-        # First delete the services
-        for svc in self.services:
-            s += svc.delete()
-
-        # Delete the hosts
-        for h in self.hosts:
-            s += h.delete()
+        for x in self.services:
+            s += x.gen_delete()
+        for x in self.hosts:
+            s += x.gen_delete()
+        for x in self.stpls:
+            s += x.gen_delete()
+        for x in self.cmds:
+            s += x.gen_delete()
 
         # Force unix-style newlines, otherwise del host fails
         with open(filepath, 'w', encoding='utf-8', newline='\n') as f:
             f.write(s)
 
     def populate(self):
+        # Check command
+        line = 'python3 $USER1$/check_service.py "$HOSTNAME$" $HOSTSTATE$' \
+            ' "$SERVICEDESC$" $SERVICESTATE$'
+        self.cmds.append(Command('check_service', line))
+
+        # Service templates
+        self.stpls.append(SrvTemplate('Joao-Template', 'Joao-Template-Alias', 'generic-active-service'))
+
         # Database servers
         self.hosts.append(Host('srvlnx001', 'lnx_db_server_01', 'linux db_server transaction'))
         self.hosts.append(Host('srvlnx002', 'lnx_db_server_02', 'linux db_server warehouse'))

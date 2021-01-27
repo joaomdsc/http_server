@@ -172,6 +172,94 @@ UI. Now I find it here, in serviceTemplates.cfg:
         use                            generic-active-service 
     }
 
-This is the only step that's necessarily manual. Once the template exists, I
-can use the CLI to create services programmatically (using generate.py and the
-import function if the cli).
+This is the only step that's necessarily manual (UPDATE: it can be automated,
+see below). Once the template exists, I can use the CLI to create services
+programmatically (using generate.py and the import function of the cli).
+
+** Changes to the generate/import mechanism
+
+This is a typical service I'm creating:
+
+    define service {
+	host_name                      srvlnx008
+	service_description            fct_web19
+	check_command                  check_service
+	register                       1
+	notes                          web_svc
+	use                            Joao-Template
+	_SERVICE_ID                    561
+    }
+
+The template includes a check_command, so there's no need to repeat it
+here. Also, register=1 is the default, remove it. I'm keeping host, service
+description, and notes, all the rest is either default or in the template.
+
+Hosts: I'm currently not using any host templates, I should (later). Right now
+I'm removing the register parameter, and everything that does not appear in the
+hosts.cfg. Here's a typical host:
+
+    define host {
+        host_name                      srvlnx008
+        alias                          lnx_web_server_04
+        address                        127.0.0.1
+        check_command                  base_host_alive
+        check_period                   24x7
+        notification_period            24x7
+        max_check_attempts             3
+        check_interval                 1
+        retry_interval                 1
+        register                       1
+        notes                          linux web_server
+        _HOST_ID                       73
+    }
+
+** Update
+
+Service templates and checks can be created programmatically, I found them in
+the export output.
+
+CMD;add;check_service;2;python3 $USER1$/check_service.py "$HOSTNAME$" $HOSTSTATE$ "$SERVICEDESC$" $SERVICESTATE$
+
+STPL;add;Joao-Template;Joao-Template-Alias;generic-active-service
+STPL;setparam;Joao-Template;check_command;check_service
+STPL;setparam;Joao-Template;check_period;24x7
+STPL;setparam;Joao-Template;service_max_check_attempts;3
+STPL;setparam;Joao-Template;service_normal_check_interval;1
+STPL;setparam;Joao-Template;service_retry_check_interval;1
+STPL;setparam;Joao-Template;service_register;0
+STPL;setparam;Joao-Template;service_activate;1
+
+** Warning
+
+If I try to import with 'cmd' lowercase instead of 'CMD', I get a PHP error:
+
+    [adminvivoo@Centreon ~]$ centreon -u admin -p admin -i import.txt
+    PHP Fatal error:  Uncaught Error: Class '\CentreonClapi\centreon' not found in /usr/share/centreon/www/class/centreon-clapi/centreonAPI.class.php:934
+    Stack trace:
+    #0 /usr/share/centreon/www/class/centreon-clapi/centreonAPI.class.php(799): CentreonClapi\CentreonAPI->iniObject('cmd')
+    #1 /usr/share/centreon/www/class/centreon-clapi/centreonAPI.class.php(769): CentreonClapi\CentreonAPI->launchActionForImport()
+    #2 /usr/share/centreon/bin/centreon(196): CentreonClapi\CentreonAPI->import('import.txt')
+    #3 {main}
+      thrown in /usr/share/centreon/www/class/centreon-clapi/centreonAPI.class.php on line 934
+    [adminvivoo@Centreon ~]$
+
+** Deploying on a new server
+
+- generate import.txt and delete.sh
+  - this generates 1 check cmd, 1 stpl, then all the hosts and services
+- run the import + applycfg
+- copy check_service.py
+
+(not sure if I need check_server.py ?)
+
+Currently, user adminvivoo doesn't have enough rights to run applycfg (do it
+through the UI) or to copy the check script. But all the objects have been
+created. Next step would be to define a host template, and simplify all the
+hosts definitions.
+
+** Commit
+
+Updates to generate.py before deploying to the remote server.
+
+Simplify the definitions (remove all non required parameters, rely on the
+template's values). Also, add the check command and service template.
