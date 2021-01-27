@@ -145,3 +145,33 @@ Preparing a presentation to demo the Centreon import into AppControl. The
 layout of servers and services is shown in all_servers.vsdx (db_servers.vsdx is
 just a subset). Some .png and .pptx files are derived from the .vsdx, they
 don't need to be under version control.
+
+--------------------------------------------------------------------------------
+
+* 2021/01/27
+
+** Centreon/Nagios configuration
+
+/etc/centreon-engine: configuration files, including the main one. This is not
+the source of the configuration, though, stuff created throught the UI gets
+copied here from somewhere. So you can't add resources to the system by editing
+the files here.
+
+So when I needed a template (Joao-Template), I had to create it through the
+UI. Now I find it here, in serviceTemplates.cfg:
+
+    define service {
+        service_description            Joao-Template-Alias 
+        name                           Joao-Template 
+        check_command                  check_service 
+        check_period                   24x7 
+        max_check_attempts             3 
+        check_interval                 1 
+        retry_interval                 1 
+        register                       0 
+        use                            generic-active-service 
+    }
+
+This is the only step that's necessarily manual. Once the template exists, I
+can use the CLI to create services programmatically (using generate.py and the
+import function if the cli).
