@@ -1,0 +1,6 @@
+{
+    "warn=0.6, crit=0.8": 0.0,
+    "fct_transactional0": 0.7,
+    "fct_data_warehouse2": 0.85,
+    "service": 0.99
+}
