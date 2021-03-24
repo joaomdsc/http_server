@@ -10,124 +10,35 @@ for each type of object.
 import os
 import re
 import json
-      
-#-------------------------------------------------------------------------------
-# I want stdout to be unbuffered, always
-#-------------------------------------------------------------------------------
-
-class Unbuffered(object):
-    def __init__(self, stream):
-        self.stream = stream
-    def write(self, data):
-        self.stream.write(data)
-        self.stream.flush()
-    def __getattr__(self, attr):
-        return getattr(self.stream, attr)
-
-import sys
-sys.stdout = Unbuffered(sys.stdout)
+from hierarchy import parse_object_types, print_node
 
 #-------------------------------------------------------------------------------
-# globals
-#-------------------------------------------------------------------------------
 
-obj_names = {
-    'host': 'host_name',
-    'hostgroup': 'hostgroup_name',
-    'service': 'service_description',
-    'servicegroup': 'servicegroup_name',
-    'contact': 'contact_name',
-    'contactgroup': 'contactgroup_name',
-    'timeperiod': 'timeperiod_name',
-    'command': 'command_name',
-    'servicedependency': None,
-    'serviceescalation': None,
-    'hostdependency': None,
-    'hostescalation': None,
-    'hostextinfo': None,
-    'serviceextinfo': None,
-    'connector': 'connector_name',
-}
+def inherit(filepath):
+    with open(filepath) as f:
+        trees = parse_object_types(json.load(f))
 
-#-------------------------------------------------------------------------------
-# print_node
-#-------------------------------------------------------------------------------
-
-def print_node(nd, level):
-    name, obj, kids = nd
-    ind = ' '*4
-    print(f'{ind*level}{name}')
-    for k in kids:
-        print_node(k, level+1)
-
-#-------------------------------------------------------------------------------
-# parse_obj_type
-#-------------------------------------------------------------------------------
-
-def parse_obj_type(otype, objs):
-    # objs is an array of object type definitions
-    temp = {}
-    # temp is a dict with key=name and value is a [name, object, kids]
-    temp[otype] = [otype, None, []]
+    # In both the text output, and in the 'xxx_tree.json' file, the services
+    # repeat the host, when in fact they're all different.
     
-    for o in objs:
-        # How does this object identify itself ?
-        key = obj_names[otype]
-        if 'name' in o:
-            key = 'name'
-        if key not in o:
-            raise RuntimeError(f'"{otype}" unidentified object "{o}"')
-        name = o[key]
-        
-        # Create my own entry
-        if name not in temp:
-            temp[name] = [name, o, []]
-        elif temp[name][1] is None:
-            # This entry was created by a child, before the parent was read, so
-            # it didn't have its object yet. Now we can fill it in.
-            temp[name][1] = o
+    # Text output
+    outpath = f'{filepath.rsplit(".", maxsplit=1)[0]}_hierarchy.txt'
+    with open(outpath, 'w') as f:
+        for t in trees:
+            print_node(f, t, 0)
 
-        # Represent parent-child relationships
-        if 'use' in o:
-            # We've found a (parent -> child) relationship from used to o
-            parent = o['use']
-            if parent not in temp:
-                # If I haven't read the parent yet, what do I put in here ?
-                temp[parent] = [parent, None, []]
-            temp[parent][2].append(temp[name])
-        else:
-            temp[otype][2].append(temp[name])
-
-    # print_node(temp[otype], 0)
-    return temp[otype]
-
-#-------------------------------------------------------------------------------
-# parse_object_types
-#-------------------------------------------------------------------------------
-
-def parse_object_types(objs):
-    trees = []
-    for k, v in objs.items():
-        # root is [otype, k, kids]
-        trees.append(parse_obj_type(k, v))
-    return trees
+    # Json output
+    outpath = f'{filepath.rsplit(".", maxsplit=1)[0]}_tree.json'
+    with open(outpath, 'w') as f:
+        json.dump(trees, f, indent=4)
 
 #-------------------------------------------------------------------------------
 # main
 #-------------------------------------------------------------------------------
 
-# Process the main objects file
-dirpath = os.path.join(os.getenv('HOME'), '.nagios_cfg')
+# Command line argument
+if len(sys.argv) != 2:
+    print(f'Usage: {sys.argv[0]} <objects file>')
+    exit(-1)
 
-filepath = os.path.join(dirpath, 'objects.json')
-with open(filepath) as f:
-    trees = parse_object_types(json.load(f))
-
-# Text output
-for t in trees:
-    print_node(t, 0)
-
-# Json output
-filepath = os.path.join(dirpath, 'inherit.json')
-with open(filepath, 'w') as f:
-    json.dump(trees, f, indent=4)
+inherit(sys.argv[1])

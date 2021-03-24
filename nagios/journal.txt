@@ -263,3 +263,68 @@ Updates to generate.py before deploying to the remote server.
 
 Simplify the definitions (remove all non required parameters, rely on the
 template's values). Also, add the check command and service template.
+
+--------------------------------------------------------------------------------
+
+* 2021/03/24
+
+** Analyzing Centreon exported data
+
+We want to get a service's check command, which may be defined in an inherited
+template. The current code builds on inherit.py, which used to work from the
+configuration objects; it mangles the export data into the same format as
+objects.json, in order to reuse the hierarchy created by inherit.py. The result
+is not necessarily very good.
+
+Most of inherit.py's code was moved to a new module called hierarchy.py, in
+order to share the code with parse_export.py. The idea is to keep inherit.py
+iso-functional and use only parse_export.py.
+
+Input files that we worked on:
+
+  - acial-export.txt: this is the (renamed) file received from Acial
+  - exported_data_centreon.txt: exported from Invivoo's Centreon server
+
+From an input file sample.txt, we run the following command:
+
+    py parse_exports.py sample.txt
+
+This produces several files:
+
+  sample_cmds.txt: a csv file with data produced by the get_services()
+  function, with host, service, check_command, and the command line associated
+  with the check command.
+
+  sample.xlsx: the same data, formatted as the excel file produced by
+  centreon_from_api.py. This would normally be edited by the user to define
+  dependencies and aggregations, before being transformed into an AppControl
+  map.
+
+  sample_hierarchy.txt: this is a tree-like representation of the derivation
+  relationship between
+
+The _cmds.txt file has many duplicates, certainly due to duplications in
+acial's exports file, but maybe also due to the way the hierarchy is
+constructed. Stéphane suggests it's not a hierarchy at all, because there can
+be multiple inheritance - but I've never seen it. In any case:
+
+    c:\a\src\py\tools\nagios>wc acial-export_cmds*
+       4112   48848 1598416 acial-export_cmds.txt
+	209    2912   74444 acial-export_cmds_nodups.txt
+       4321   51760 1672860 total
+
+There are 209 lines with SERVICE;ADD in the exports file, that's what we should
+be getting in the first place (right now we get that by removing duplicates).
+
+So the file acial-export_cmds_nodups.txt is our reference, this is what the new
+code (found under koordinator/scripts and koordinator/restapi/centrex.py) needs
+to produce.
+
+** Commit
+
+Analyzing Centreon exported data for the Acial demo on March 23rd.
+
+Code was written to get the check commands associated to each service, which
+may be defined in some template many times removed in the derivation tree. This
+list of commands was later used in koordinator/scripts/acial_services.py to
+generate the AppControl maps.
